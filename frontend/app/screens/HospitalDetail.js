@@ -1,11 +1,14 @@
 import axios from "axios";
 axios.default;
 import React, { useState, useEffect} from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { Linking } from 'react-native';
 import colors from '../config/colors';
 import { Entypo } from '@expo/vector-icons';
 import { FontAwesome } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
+import {API_ENDPOINT} from '@env'
 
 function HospitalDetail({ route }) {
     const id = route.params.userId;
@@ -17,7 +20,7 @@ function HospitalDetail({ route }) {
     }, [HospitalDetail]);
 
     const getUserById = () => {
-        axios.get(`http://192.168.43.124:3000/api/find/${id}`)
+        axios.get(`${API_ENDPOINT}/api/find/${id}`)
         .then(function (response) {
             // handle success
             setHospitalDetail(response.data)
@@ -28,6 +31,14 @@ function HospitalDetail({ route }) {
         })
 
     }
+
+    const openMaps = () => {
+        if (hospitalDetail && hospitalDetail.coordinates) {
+          const { latitude, longitude } = hospitalDetail.coordinates;
+          const url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
+          Linking.openURL(url);
+        }
+      };
 
 return (
     <View style={ styles.container }> 
@@ -41,10 +52,11 @@ return (
           <Text style={styles.text}><FontAwesome name="phone-square" size={16} color="black" /> Phone: {hospitalDetail.phone}</Text>
           <Text style={styles.text}><Entypo name="back-in-time" size={16} color="black" /> Hours: {hospitalDetail.hours.weekdays}, { hospitalDetail.hours.weekends }</Text>
         <Text style={ styles.text }><MaterialIcons name="medical-services" size={16} color="black" />Services: {hospitalDetail.services.join(', ')}</Text>
-          {/* {hospitalDetail.services.map((service, index) => (
-              <Text style={ styles.text } key={ index }>{ service }</Text>
-            
-          )) } */}
+        <TouchableOpacity onPress={openMaps} style={styles.button}>
+         <Text style={styles.btnText}>Navigate to hospital<Ionicons name="location" size={24} color={"white"} /></Text>
+        </TouchableOpacity>
+
+        
        </View>
         </>
       )}
@@ -57,7 +69,7 @@ return (
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.primary, 
+        backgroundColor: "white", 
     },
     HospitalContainer: {
         alignItems: "center",
@@ -70,7 +82,7 @@ const styles = StyleSheet.create({
     },
     hospital: {
         fontSize: 30,
-        fontWeight: "bold",   
+           
         marginTop: 20,
         marginBottom: 20,
         paddingHorizontal: 10,
@@ -79,18 +91,29 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderRadius: 5,
         borderColor: '#ccc',
-        color: colors.secondary
+        color: "black"
     },
     text: {
         fontSize: 16,
-        fontWeight: 'bold',
         marginBottom: 5,
         padding: 1,
         color: colors.tertiary,
     // Add other desired styles
     },
-    
-    
+    button: {
+    backgroundColor: '#FF6969',
+    borderRadius: 25,
+    paddingVertical: 15,
+    paddingHorizontal: 10,
+    marginTop: 50,
+    width: '70%',
+  },
+  btnText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
 })
 
 export default HospitalDetail;

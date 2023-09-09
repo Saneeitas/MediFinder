@@ -49,7 +49,7 @@ export default function ThirdTabScreen({ navigation }) {
   }, [hospitalslist, location]);
 
   const getHospitals = () => {
-    axios.get('http://192.168.43.124:3000/api/find')
+    axios.get('http://192.168.67.23:3000/api/find')
       .then(function (response) {
         // handle success
         setHospitalsList(response.data);

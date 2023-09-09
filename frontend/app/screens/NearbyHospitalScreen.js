@@ -2,9 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import * as Location from 'expo-location';
 import axios from "axios"
+import colors from '../config/colors';
+import { Entypo } from '@expo/vector-icons';
+import {API_ENDPOINT} from '@env'
 
 
-export default function ThirdTabScreen({ navigation }) {
+export default function SecondTabScreen({ navigation }) {
   const [isLoading, setIsLoading] = useState(true);
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -31,6 +34,15 @@ export default function ThirdTabScreen({ navigation }) {
 
   useEffect(() => {
     if (hospitalslist.length > 0 && location) {
+      // Sort the hospitals by distance from the user's current location
+      hospitalslist.sort((a, b) => {
+        const aDistance = calculateDistance(location.latitude, location.longitude, a.coordinates.latitude, a.coordinates.longitude);
+        const bDistance = calculateDistance(location.latitude, location.longitude, b.coordinates.latitude, b.coordinates.longitude);
+        return aDistance - bDistance;
+      });
+
+      setHospitals(hospitalslist);
+
       // Find the nearest hospital to the user's current location
       let nearestDistance = Infinity;
       let nearestHospital = null;
@@ -47,7 +59,7 @@ export default function ThirdTabScreen({ navigation }) {
   }, [hospitalslist, location]);
 
   const getHospitals = () => {
-    axios.get('http://192.168.43.124:3000/api/find')
+    axios.get(`${API_ENDPOINT}/api/find`)
       .then(function (response) {
         // handle success
         setHospitalsList(response.data)
@@ -60,31 +72,42 @@ export default function ThirdTabScreen({ navigation }) {
   }
 
   if (errorMsg) {
-     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-         <Text>{ errorMsg }</Text>
-         <TouchableOpacity onPress={getHospitals}><Text>Try Again</Text></TouchableOpacity>
-      </View>
-    );
+    return <Text >{errorMsg}</Text>
   } else if (!location) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color={colors.secondary} />
       </View>
     );
   } else if (isLoading) {
      return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color={colors.secondary} />
       </View>
     );
   } else {
     return (
       <View style={ styles.container }>
-        <View style={ styles.container }>
-           <Text>Nearest hospital to your location is:</Text>
-          <Text style={{fontWeight:"bold"}}> {nearestHospital}</Text>
-        </View>
+       <Text style={ styles.header }> <Entypo name="list" size={16} color="white" /> List of Nearby Hospital</Text> 
+        
+        <FlatList
+          data={hospitals}
+          keyExtractor={item => item._id}
+          renderItem={({ item }) => (
+            <View style={ styles.hospital }>
+              <TouchableOpacity onPress={ () => navigation.navigate("Hospital Information", {
+                userId: item._id,
+              }) }>
+                <Text style={ styles.name }>{ item.name }</Text>
+                <Text style={ styles.distance }>
+                  <Entypo name="location-pin" size={16} color="black" />
+                  { calculateDistance(location.latitude, location.longitude,
+                    item.coordinates.latitude, item.coordinates.longitude)
+                  } km away </Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        />
       </View>
     );
   }
@@ -110,37 +133,46 @@ function deg2rad(deg) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    paddingTop: 30,
+    paddingHorizontal: 16,
+    backgroundColor: "white",
+    
   },
   header: {
-    padding: 10,
-    paddingTop: 50,
-    borderBottomWidth: 1,
+    padding: 2,
+    marginBottom: 4,
     borderBottomColor: '#ccc',
     width: '100%',
     fontWeight: "bold",
-    fontSize: 20
+    fontSize: 20,
+    textAlign: "center",
+    color: "white",
+    backgroundColor: "#FF6969",
+    borderRadius: 5
+  
   },
   hospital: {
-    // padding: 10,
-    // paddingTop: 50,
-    // borderBottomWidth: 1,
-    // borderBottomColor: '#ccc',
-    // width: '100%',
-
-    marginTop: 20,
-    marginBottom: 20,
+    marginTop: 10,
+    marginBottom: 5,
     paddingHorizontal: 10,
     paddingVertical: 5,
-    borderWidth: 1,
-    borderRadius: 5,
+    borderWidth: 0,
+    borderBottomWidth: 1,
+    borderRadius: 6,
     borderColor: '#ccc',
     alignSelf: 'stretch',
     maxHeight: 200,
     overflow: 'scroll',
+    backgroundColor: "transparent",
+
   },
+  name: {
+    color: '#2C2C2C',
+    fontSize: 30,
+    // fontWeight: "bold"
+  },
+  distance: {
+    color: "green",
+  }
 
 });
-
