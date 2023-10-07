@@ -2,14 +2,14 @@
 require("dotenv").config();
 const cors = require("cors")
 const express = require("express");
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 const hospitalRoutes = require("./routes/hospital")
 
 
 const app = express();
 
-app.use(cors())
-app.use(express.json())
+app.use(cors());
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 
